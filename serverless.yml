@@ -19,7 +19,20 @@ provider:
         - Effect: 'Allow'
           Resource: '*'
           Action: 's3:*'
+custom:
+  bucket: mustafa-thumbnails
+  pythonRequirments:
+    dockerizePip: true
 
 functions:
-  hello:
-    handler: handler.hello
+  s3-thumbnail-generator:
+    handler: handler.s3-thumbnail-generator
+    events:
+      - s3:
+        bucket: ${self:custom.bucket}
+        event: s3ObjectCreated:*
+        rules:
+          - suffix: .png
+
+plugins:
+  - serverless-python-requirments
