@@ -5,6 +5,22 @@ frameworkVersion: '3'
 provider:
   name: aws
   runtime: python3.9
+  region: us-east-1
+  profile: serverless-admin
+  stage: dev
+  timeout: 10
+  memorysize: 128
+  environment:
+    THUMBNAIL_SIZE: 128
+    REGION_NAME: ${self:provider.region}
+
+  iam:
+    role:
+      statemtnets:
+        - Effect: 'Allow'
+          Resource: '*'
+          Action: 's3:*'
+
 
 functions:
   hello:
