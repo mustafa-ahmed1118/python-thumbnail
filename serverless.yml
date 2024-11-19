@@ -22,6 +22,22 @@ provider:
           Action: 's3:*'
 
 
+custom:
+  bucket: mustafa-thumbails
+  pythonRequirements:
+    dockerizePip: true
+
+
 functions:
-  hello:
-    handler: handler.hello
+  s3_thumbnail_generator:
+    handler: handler.s3_thumbnail_generator
+    description: "First lambda function implementation creating thumbnails"
+    events:
+      - s3:
+          bucket: ${self:custom.bucket}
+          event: s3:ObjectCreated:*
+          rules:
+            - suffix: .png
+
+plugins:
+  - serverless-python-requirements
