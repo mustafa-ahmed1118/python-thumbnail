@@ -96,4 +96,58 @@ def s3_save_thumbnail_url_to_dynamo(url_path, img_size):
         'body': json.dumps(response)
     }
 
+################
+##API HANDLERS##
+################
+def s3_get_thumbnail_urls(event, context):
+    table = dynamodb.Table(dbtable)
+    response = table.scan()
+    data = response['Items']
+
+    while 'LastEvaluatedKey' in response:
+        response = table.scan(ExclusiveStartkey=response['LastEvaluatedKey'])
+        data.extend(response['Items'])
+
+    return{
+        'statusCode': 200,
+        'headers': {'Content-Type': 'application/json'},
+        'body': json.dumps(data),
+    }
+
+def s3_get_item(event, context):
+    table = dynamodb.Table(dbtable)
+    response = table.get_item(key={'id' : event['pathParameters']['id']})
+    item = response['Item']
+    return{
+        'statusCode': 200,
+        'headers': {'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'},
+        'body': json.dumps(item),
+        'isBase64Encoded': False,
+    }
     
+def s3_delete_item(event, context):
+    item_id = event['pathParameters']['id']
+
+    response = {
+        "statusCode": 500,
+        "body": f"An error occured while deleting post {item_id}"
+    }
+    table = dynamodb.Table(dbtable)
+    response = table.delete_item(Key={
+        'id': item_id
+    })
+    all_good_response ={
+        'deleted': True,
+        'itemDeletedId': item_id
+    }
+
+    if response['ResponseMetaData']['HTTPStatusCode'] == 200:
+        response = {
+            "statusCode": 200,
+            "heders": {'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'},
+            "body": json.dumps(all_good_response),
+        }
+    
+    return response
